@@ -1,0 +1,18 @@
+[package]
+name = "lek-project"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = "0.4.10"
+diesel = "1.4.8"
+serde_json = "1.0.79"
+serde = "1.0.136"
+serde_derive = "1.0.109"
+
+[dependencies.rocket_contrib]
+version = "0.4.10"
+default-features = false
+features = ["diesel_mysql_pool", "json"]
