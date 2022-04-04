@@ -1,26 +1,50 @@
 table! {
+    category (id) {
+        id -> Integer,
+        name -> Text,
+    }
+}
+
+table! {
+    comments (id) {
+        id -> Integer,
+        content -> Nullable<Text>,
+        answer -> Nullable<Integer>,
+        users_fk -> Integer,
+        questions_fk -> Integer,
+    }
+}
+
+table! {
     questions (id) {
         id -> Integer,
-        text -> Text,
+        content -> Text,
         answer_1 -> Text,
         answer_2 -> Text,
-        anwser_3 -> Text,
-        anwser_4 -> Text,
+        answer_3 -> Text,
+        answer_4 -> Text,
         answer_5 -> Text,
         correct_answer -> Nullable<Integer>,
+        category_fk -> Integer,
     }
 }
 
 table! {
     users (id) {
         id -> Integer,
-        password_hash -> Integer,
+        password_hash -> Text,
         user_name -> Text,
-        salt -> Integer,
+        salt -> Text,
     }
 }
 
+joinable!(comments -> questions (questions_fk));
+joinable!(comments -> users (users_fk));
+joinable!(questions -> category (category_fk));
+
 allow_tables_to_appear_in_same_query!(
+    category,
+    comments,
     questions,
     users,
 );
