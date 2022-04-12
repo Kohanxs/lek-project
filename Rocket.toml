@@ -1,4 +1,4 @@
 
 
 [global.databases.local_db]
-url = "mysql://root:9IlBo19yh8Jpx4CMhWMQ@172.31.160.1:3306/lek_2023"
+url = "mysql://username:password@ip.add.re.ss/databasename"
