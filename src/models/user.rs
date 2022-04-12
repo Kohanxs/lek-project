@@ -16,8 +16,16 @@ pub struct InsertableUser {
     pub salt: String
 }
 
-#[derive(Deserialize)]
-pub struct NewUserForm {
+#[derive(Deserialize, juniper::GraphQLInputObject)]
+pub struct NewUserInput {
+    pub login: String,
     pub user_name: String,
     pub password: String
 }
+
+#[derive(Deserialize)]
+pub struct LoginForm {
+    pub user_name: String,
+    pub password: String
+}
+

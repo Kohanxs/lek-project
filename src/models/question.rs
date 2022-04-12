@@ -1,7 +1,8 @@
 use crate::schema::questions;
 use crate::models::category;
+use juniper::{GraphQLObject};
 
-#[derive(Debug, diesel::Queryable, diesel::Identifiable, diesel::Associations, Serialize, Deserialize)]
+#[derive(Debug, GraphQLObject, diesel::Queryable, diesel::Identifiable, diesel::Associations, Serialize, Deserialize)]
 #[belongs_to(category::Category, foreign_key="category_fk")]
 pub struct Question {
     pub id: i32,

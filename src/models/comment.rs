@@ -27,9 +27,11 @@ pub struct InsertableComment {
     pub questions_fk: i32
 }
 
+#[derive(rocket::FromForm, Deserialize)]
 pub struct NewCommentForm {
     pub content: String,
     pub user: String,
-    pub question: String
+    pub question: String,
+    pub suggested_answer: Option<i32>
 }
 
