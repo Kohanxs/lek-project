@@ -2,8 +2,8 @@
 use crate::database;
 use crate::database::DbConn;
 use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription};
-use crate::models::user;
-use crate::models::question;
+use crate::models::{user, comment, question};
+use crate::hashing;
 
 pub struct GraphQLContext {
     pub db_connection: DbConn
@@ -36,10 +36,37 @@ impl Mutation {
     
     pub async fn register(
         context: &GraphQLContext,
-        input: user::NewUserInput,
+        input: user::NewUser,
     ) -> FieldResult<String> {
-        let result = context.db_connection.run(move |conn| database::new_user(conn, &input.user_name, &input.password)).await?;
+        let (hash, salt) = hashing::get_hash_and_salt(&input.password)?;
+
+
+        let user_to_insert = user::InsertableUser {
+            user_name: input.user_name.to_owned(),
+            password_hash: hash.to_owned(),
+            salt: salt.to_owned(),
+            nickname: input.nickname.to_owned(),
+        };
+        let result = context.db_connection.run(move |conn| database::new_user(conn, &user_to_insert)).await?;
         Ok(String::from("Successful registration"))
+    }
+
+    pub async fn create_comment(
+        context: &GraphQLContext,
+        input: comment::NewComment,
+    ) -> FieldResult<String> {
+        
+        let comment_to_insert = comment::InsertableComment {
+            content: input.content.to_owned(),
+            answer: input.suggested_answer,
+            users_fk: 1, //TODO get user from context?
+            questions_fk: input.question
+        };
+
+
+        let result = context.db_connection.run(move |conn| database::new_comment(conn, &comment_to_insert)).await?;
+        Ok(String::from("Successful registration"))
+    
     }
 
 }

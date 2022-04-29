@@ -27,11 +27,11 @@ pub struct InsertableComment {
     pub questions_fk: i32
 }
 
-#[derive(rocket::FromForm, Deserialize)]
-pub struct NewCommentForm {
+#[derive(Deserialize, juniper::GraphQLInputObject)]
+pub struct NewComment {
     pub content: String,
     pub user: String,
-    pub question: String,
+    pub question: i32,
     pub suggested_answer: Option<i32>
 }
 

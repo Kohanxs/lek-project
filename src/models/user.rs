@@ -5,7 +5,8 @@ pub struct User {
     pub id: i32,
     pub password_hash: String,
     pub user_name: String,
-    pub salt: String
+    pub salt: String,
+    pub nickname: String
 }
 
 #[derive(Deserialize, diesel::Insertable)]
@@ -13,14 +14,15 @@ pub struct User {
 pub struct InsertableUser {
     pub password_hash: String,
     pub user_name: String,
-    pub salt: String
+    pub salt: String,
+    pub nickname: String
 }
 
 #[derive(Deserialize, juniper::GraphQLInputObject)]
-pub struct NewUserInput {
-    pub login: String,
+pub struct NewUser {
     pub user_name: String,
-    pub password: String
+    pub password: String,
+    pub nickname: String
 }
 
 #[derive(Deserialize)]

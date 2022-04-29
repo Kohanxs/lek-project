@@ -3,7 +3,7 @@ use crate::models::user::{User, InsertableUser};
 use crate::models::comment::{Comment, InsertableComment};
 use crate::diesel::RunQueryDsl;
 use crate::diesel::ExpressionMethods;
-use crate::hashing;
+
 use crate::utils::BackendError;
 use rocket_sync_db_pools::{database};
 use rocket_sync_db_pools::diesel::MysqlConnection;
@@ -12,18 +12,10 @@ use rocket_sync_db_pools::diesel::MysqlConnection;
 pub struct DbConn(MysqlConnection);
 
 
-pub fn new_user(conn: &MysqlConnection, user_name: &str, password: &str) -> Result<usize, BackendError> {
+pub fn new_user(conn: &MysqlConnection, user_to_insert: &InsertableUser) -> Result<usize, BackendError> {
     use crate::schema::users;
 
-    let (hash, salt) = hashing::get_hash_and_salt(password)?;
-
-    let user_to_insert = InsertableUser {
-        user_name: user_name.to_owned(),
-        password_hash: hash.to_owned(),
-        salt: salt.to_owned()
-    };
-
-    let database_result = diesel::insert_into(users::table).values(&user_to_insert).execute(conn)?;
+    let database_result = diesel::insert_into(users::table).values(user_to_insert).execute(conn)?;
 
     Ok(database_result)
 }

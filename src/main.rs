@@ -12,7 +12,7 @@ extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
-use diesel::prelude::*;
+
 use rocket_session_store::{
 	memory::MemoryStore,
 	SessionStore,

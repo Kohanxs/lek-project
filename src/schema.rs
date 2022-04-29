@@ -32,9 +32,10 @@ table! {
 table! {
     users (id) {
         id -> Integer,
-        password_hash -> Text,
         user_name -> Text,
+        password_hash -> Text,
         salt -> Text,
+        nickname -> Text,
     }
 }
 
