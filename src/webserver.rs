@@ -1,13 +1,14 @@
 
-
+use crate::auth;
 use crate::database;
 use crate::graphql::{GraphQLContext, Schema};
+use crate::models::user::SafeUser;
 use rocket::{response::content, State};
-
+use std::sync::Arc;
 
 
 #[rocket::get("/")]
-pub fn graphiql() -> content::Html<String> {
+pub fn graphiql() -> content::RawHtml<String> {
     juniper_rocket::graphiql_source("/graphql", None)
 }
 
@@ -16,8 +17,10 @@ pub async fn get_graphql_handler(
     conn: database::DbConn,
     request: juniper_rocket::GraphQLRequest,
     schema: &State<Schema>,
+    jwt_config: &State<Arc<auth::JWTConfig>>,
+    authenticated_user: Option<SafeUser>
 ) -> juniper_rocket::GraphQLResponse {
-    request.execute(&*schema, &GraphQLContext { db_connection: conn } ).await
+    request.execute(&*schema, &GraphQLContext { db_connection: conn, user: authenticated_user, jwt_config: jwt_config.inner().clone()} ).await
 
 }
 
@@ -26,8 +29,10 @@ pub async fn post_graphql_handler(
     conn: database::DbConn,
     request: juniper_rocket::GraphQLRequest,
     schema: &State<Schema>,
+    jwt_config: &State<Arc<auth::JWTConfig>>, //TODO how to get away from Arc?
+    authenticated_user: Option<SafeUser>
 ) -> juniper_rocket::GraphQLResponse {
-    request.execute(&*schema, &GraphQLContext { db_connection: conn } ).await
+    request.execute(&*schema, &GraphQLContext { db_connection: conn, user: authenticated_user, jwt_config: jwt_config.inner().clone()} ).await
 }
 
 

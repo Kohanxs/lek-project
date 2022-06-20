@@ -1,41 +1,41 @@
 table! {
     category (id) {
-        id -> Integer,
-        name -> Text,
+        id -> Int4,
+        name -> Varchar,
     }
 }
 
 table! {
     comments (id) {
-        id -> Integer,
-        content -> Nullable<Text>,
-        answer -> Nullable<Integer>,
-        users_fk -> Integer,
-        questions_fk -> Integer,
+        id -> Int4,
+        content -> Text,
+        suggested_answer -> Nullable<Int4>,
+        users_fk -> Int4,
+        questions_fk -> Int4,
+        likes -> Int4,
     }
 }
 
 table! {
     questions (id) {
-        id -> Integer,
+        id -> Int4,
         content -> Text,
         answer_1 -> Text,
         answer_2 -> Text,
         answer_3 -> Text,
         answer_4 -> Text,
         answer_5 -> Text,
-        correct_answer -> Nullable<Integer>,
-        category_fk -> Integer,
+        correct_answer -> Nullable<Int4>,
+        category_fk -> Nullable<Int4>,
     }
 }
 
 table! {
     users (id) {
-        id -> Integer,
-        user_name -> Text,
-        password_hash -> Text,
-        salt -> Text,
-        nickname -> Text,
+        id -> Int4,
+        username -> Varchar,
+        password_hash -> Varchar,
+        nickname -> Varchar,
     }
 }
 

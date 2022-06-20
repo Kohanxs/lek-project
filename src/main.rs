@@ -4,7 +4,7 @@ mod database;
 mod webserver;
 mod schema;
 mod models;
-mod hashing;
+mod auth;
 mod utils;
 mod graphql;
 use rocket::{routes, launch};
@@ -21,7 +21,7 @@ use rocket_session_store::{
 	CookieConfig,
 };
 
-use std::time::Duration;
+use std::{time::Duration, sync::Arc};
 
 #[launch]
 async fn rocket() -> _ {
@@ -33,9 +33,13 @@ async fn rocket() -> _ {
 		// The cookie config is used to set the cookie's path and other options.
 		cookie: CookieConfig::default(),
 	};
+
+	// TODO create decoding and encoding keys to managed state
+
     rocket::build()
     .attach(database::DbConn::fairing())
 	.manage(graphql::create_schema())
+	.manage(Arc::new(auth::get_jwt_config()))
     .mount("/", routes![webserver::graphiql, webserver::get_graphql_handler, webserver::post_graphql_handler])
 }
 

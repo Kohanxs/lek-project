@@ -6,21 +6,23 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.5.0-rc"
+rocket = "0.5.0-rc.2"
 diesel = "1.4.8"
 serde_json = "1.0.79"
 serde = "1.0.136"
 serde_derive = "1.0.109"
 redis = "0.21.5"
 rocket-session-store = "0.2.0"
-bcrypt = "0.12"
+async-trait = "0.1.56"
+bcrypt = "0.13.0"
 juniper = "0.15.9"
 juniper_rocket = "0.8.1"
+jsonwebtoken = "8.1.0"
 [dependencies.rocket_contrib]
-version = "0.4.10"
+version = "0.4.11"
 default-features = false
 features = ["json"]
 [dependencies.rocket_sync_db_pools]
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 default-features = false
-features = ["diesel_mysql_pool"]
+features = ["diesel_postgres_pool"]

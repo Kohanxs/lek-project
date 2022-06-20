@@ -1,11 +1,11 @@
+use juniper::GraphQLObject;
 use crate::schema::users;
 
-#[derive(Debug, diesel::Queryable, diesel::Identifiable, Serialize, Deserialize)]
+#[derive(GraphQLObject, Debug, diesel::Queryable, diesel::Identifiable, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
+    pub username: String,
     pub password_hash: String,
-    pub user_name: String,
-    pub salt: String,
     pub nickname: String
 }
 
@@ -13,21 +13,32 @@ pub struct User {
 #[table_name = "users"]
 pub struct InsertableUser {
     pub password_hash: String,
-    pub user_name: String,
-    pub salt: String,
+    pub username: String,
     pub nickname: String
 }
 
-#[derive(Deserialize, juniper::GraphQLInputObject)]
+#[derive(diesel::Queryable, Deserialize, juniper::GraphQLInputObject)]
 pub struct NewUser {
-    pub user_name: String,
+    pub username: String,
     pub password: String,
     pub nickname: String
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, juniper::GraphQLInputObject)]
 pub struct LoginForm {
-    pub user_name: String,
+    pub username: String,
     pub password: String
 }
 
+#[derive(GraphQLObject, Serialize, Deserialize)]
+pub struct Tokens {
+    pub access_token: String,
+    pub refresh_token: String
+}
+
+#[derive(diesel::Queryable)]
+pub struct SafeUser {
+    pub id: i32,
+    pub username: String,
+    pub nickname: String
+}
