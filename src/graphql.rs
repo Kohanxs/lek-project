@@ -2,7 +2,7 @@
 use crate::database;
 use crate::database::DbConn;
 use jsonwebtoken::get_current_timestamp;
-use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription, graphql_value, DefaultScalarValue};
+use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription, graphql_value};
 use crate::models::{user, comment, question, category};
 use crate::auth;
 use crate::utils;
@@ -31,18 +31,18 @@ impl Query{
         Ok(result)
     }
     
-    pub async fn questions(context: &GraphQLContext) -> FieldResult<Vec<question::Question>> {
-        // TODO: pass the GraphQLContext into the querying functions rather
-        // than a PgConnection (for brevity's sake)
-        
-        let result = context.db_connection.run(|conn| database::get_all_questions(conn)).await?;
+    pub async fn questions(context: &GraphQLContext, id: Option<i32>, category_id: Option<i32>) -> FieldResult<Vec<question::Question>> {
+        let result = match (id, category_id) {
+            (None, None) => context.db_connection.run(|conn| database::get_all_questionsQL(conn)).await?,
+            (Some(id), _) => context.db_connection.run(move|conn| database::get_question_by_idQL(conn, id)).await?,
+            (None, Some(id)) => context.db_connection.run(move|conn| database::get_questions_by_categoryQL(conn, id)).await?
+        };
         Ok(result)
     }
 
     pub async fn comments(context: &GraphQLContext, question_id: i32) -> FieldResult<Vec<comment::Comment>> {
-        // TODO: pass the GraphQLContext into the querying functions rather
-        // than a PgConnection (for brevity's sake)
-        let result = context.db_connection.run(move |conn| database::get_comments_by_question(conn, question_id)).await?;
+
+        let result = context.db_connection.run(move |conn| database::get_comments_for_question(conn, question_id)).await?;
         Ok(result)
     }
 

@@ -14,3 +14,6 @@ Rocket.toml
 # Added by cargo
 
 /target
+/bin
+/.crates.toml
+/.crates2.json

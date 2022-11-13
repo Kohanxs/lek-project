@@ -3,7 +3,6 @@ use std::fmt::Display;
 use bcrypt::BcryptError;
 use diesel::result::Error as DieselError;
 use jsonwebtoken::errors::Error as JsonWebTokenError;
-use juniper::{IntoFieldError, DefaultScalarValue};
 
 // pub enum LoginFailureError {
 //     // UsernameError(FieldError::new::<DefaultScalarValue>("Password verification failed!", graphql_value!({"verification_error": "Wrong password"}))),

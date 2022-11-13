@@ -1,9 +1,9 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{sync::Arc};
 
 use async_trait::async_trait;
 use bcrypt;
 use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
-use rocket::{request::{FromRequest, Outcome}, outcome::{try_outcome, IntoOutcome}, http::Status};
+use rocket::{request::{FromRequest, Outcome}, http::Status};
 use crate::models::user::SafeUser;
 use crate::utils::BackendError;
 use crate::database::{get_safeuser_by_id, DbConn};

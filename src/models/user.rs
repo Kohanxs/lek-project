@@ -1,10 +1,11 @@
 use juniper::GraphQLObject;
-use crate::schema::users;
+use crate::{schema::users};
 
 #[derive(GraphQLObject, Debug, diesel::Queryable, diesel::Identifiable, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
+    #[graphql(skip)]
     pub password_hash: String,
     pub nickname: String
 }
