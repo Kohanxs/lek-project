@@ -1,11 +1,13 @@
 
 use crate::database;
 use crate::database::DbConn;
+use crate::models::comment::Comment;
+use diesel::result::Error::NotFound;
 use jsonwebtoken::get_current_timestamp;
-use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription, graphql_value};
+use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription, graphql_value, FieldError};
 use crate::models::{user, comment, question, category};
 use crate::auth;
-use crate::utils;
+use crate::utils::{self, BackendError};
 use std::sync::Arc;
 
 pub struct GraphQLContext{
@@ -33,9 +35,9 @@ impl Query{
     
     pub async fn questions(context: &GraphQLContext, id: Option<i32>, category_id: Option<i32>) -> FieldResult<Vec<question::Question>> {
         let result = match (id, category_id) {
-            (None, None) => context.db_connection.run(|conn| database::get_all_questionsQL(conn)).await?,
-            (Some(id), _) => context.db_connection.run(move|conn| database::get_question_by_idQL(conn, id)).await?,
-            (None, Some(id)) => context.db_connection.run(move|conn| database::get_questions_by_categoryQL(conn, id)).await?
+            (None, None) => context.db_connection.run(|conn| database::get_all_questions_ql(conn)).await?,
+            (Some(id), _) => context.db_connection.run(move|conn| database::get_question_by_id_ql(conn, id)).await?,
+            (None, Some(id)) => context.db_connection.run(move|conn| database::get_questions_by_category_ql(conn, id)).await?
         };
         Ok(result)
     }
@@ -58,19 +60,36 @@ impl Mutation {
         context: &GraphQLContext, 
         input: user::LoginForm,
     ) -> FieldResult<user::Tokens> {
+        // TODO timing problem, wrong username -> instant reaction, wrong password -> takes some time
+        let user = context.db_connection.run(move |conn| database::get_user_by_username(conn, &input.username)).await.map_err(|err| {
+            match err {
+                BackendError::DatabaseError(NotFound) => BackendError::WrongCredentials,
+                do_not_change => do_not_change
+            }
+        })?;
         
-        let user = context.db_connection.run(move |conn| database::get_user_by_username(conn, &input.username)).await?;
+        let password_matches = auth::check_hash(&input.password, &user.password_hash)?;
         
-        let result = auth::check_hash(&input.password, &user.password_hash)?;
-        
-        if result {
+        let result = if password_matches {
             let timestamp = get_current_timestamp();
             let tokens = (auth::generate_access_token(user.id, timestamp, &context.jwt_config)?, auth::generate_refresh_token(user.id, timestamp, &context.jwt_config)?);
-            return Ok(user::Tokens {access_token: tokens.0, refresh_token: tokens.1})
+            Ok(user::Tokens {access_token: tokens.0, refresh_token: tokens.1})
         } else {
-            return Err(juniper::FieldError::new("Password is incorrect!", graphql_value!({ "authentication error": "incorrect password"})))
-        }
+            Err(FieldError::from(utils::BackendError::WrongCredentials))
+        };
+
+        result
     }
+
+    // pub async fn refresh_tokens(
+    //     context: &GraphQLContext,
+    //     refresh_token: String,
+    // ) -> FieldResult<user::Tokens> {
+        
+        
+
+        
+    // }
     
     pub async fn signup(
         context: &GraphQLContext,
@@ -103,6 +122,57 @@ impl Mutation {
             };
         let result = context.db_connection.run(move |conn| database::new_comment(conn, &comment_to_insert)).await?;
         Ok(result)
+    }
+
+    pub async fn delete_comment(
+        context: &GraphQLContext,
+        input: comment::DeleteComment,
+    ) -> FieldResult<bool> {
+        
+        let user = context.user.as_ref().ok_or(utils::BackendError::NotAuthorized)?; //TODO boilerplate
+
+        let comment = context.db_connection.run(move |conn| database::get_comment_by_id(conn, input.id)).await?;
+
+        let result = if comment.users_fk == user.id {
+            context.db_connection.run(move |conn| database::delete_comment(conn, input.id)).await?;
+            Ok(true)
+        } else {
+            /* Trying to delete someone else's comment  */
+            Err(FieldError::from(utils::BackendError::NotAuthorized))
+        };
+
+        result
+    }
+
+    pub async fn modify_comment(
+        context: &GraphQLContext,
+        input: comment::ModifyCommentForm,
+    ) -> FieldResult<Comment> {
+        
+        let user = context.user.as_ref().ok_or(utils::BackendError::NotAuthorized)?; //TODO boilerplate
+
+        let comment = context.db_connection.run(move |conn| database::get_comment_by_id(conn, input.id)).await?;
+
+        let result = if comment.users_fk == user.id {
+            let modification_result = context.db_connection.run(move |conn| database::modify_comment(conn, &input.into())).await?;
+            Ok(modification_result)
+        } else {
+            /* Trying to modify someone else's comment  */
+            Err(FieldError::from(utils::BackendError::NotAuthorized))
+        };
+        result
+    }
+
+    pub async fn delete_user<'db>(
+        context: &'db GraphQLContext
+    ) -> FieldResult<bool> {
+        {
+            let user = context.user.as_ref().ok_or(utils::BackendError::NotAuthorized)?; //TODO boilerplate
+            let user_id = user.id;
+            context.db_connection.run(move |conn| database::delete_user(conn, user_id)).await?;
+        }
+        
+        Ok(true)
     }
 
 

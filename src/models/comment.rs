@@ -1,4 +1,4 @@
-use juniper::GraphQLObject;
+use juniper::{GraphQLObject, Nullable};
 
 use crate::schema::comments;
 use crate::models::user::User;
@@ -14,8 +14,8 @@ pub struct CommentDB {
     pub id: i32,
     pub content: String,
     pub suggested_answer: Option<i32>,
-    pub questions_fk: i32,
     pub users_fk: i32,
+    pub questions_fk: i32,
     pub likes: i32
 }
 
@@ -56,3 +56,34 @@ pub struct NewComment {
     pub suggested_answer: Option<i32>
 }
 
+#[derive(Deserialize, juniper::GraphQLInputObject)]
+pub struct DeleteComment {
+    pub id: i32
+}
+
+#[derive(juniper::GraphQLInputObject)]
+pub struct ModifyCommentForm {
+    pub id: i32,
+    pub content: Option<String>,
+    pub suggested_answer: Nullable<i32>
+}
+
+#[derive(Deserialize, AsChangeset)]
+#[table_name = "comments"]
+pub struct ModifyComment {
+    pub id: i32,
+    pub content: Option<String>,
+    pub suggested_answer: Option<Option<i32>>
+}
+
+impl Into<ModifyComment> for ModifyCommentForm {
+    fn into(self) -> ModifyComment {
+        ModifyComment {
+            // The `explicit` function transforms the `Nullable` into an
+            // `Option<Option<T>>` as expected by the business logic layer.
+            id: self.id,
+            content: self.content,
+            suggested_answer: self.suggested_answer.explicit()
+        }
+    }
+}

@@ -18,6 +18,7 @@ pub enum BackendError {
     TokenError(JsonWebTokenError),
     UnknownError,
     NotAuthorized,
+    WrongCredentials
 }
 
 impl Display for BackendError {
@@ -25,14 +26,39 @@ impl Display for BackendError {
         match self {
             BackendError::CryptoError(crypto_error) =>
                 write!(f, "{}", crypto_error),
-            BackendError::DatabaseError(diesel_error) => 
-                write!(f, "{}", diesel_error),
+            BackendError::DatabaseError(diesel_error) => {
+                match diesel_error {
+                    DieselError::NotFound => write!(f, "Resource not found"),
+                    DieselError::DatabaseError(error_kind, details) => {
+                        match error_kind {
+                            diesel::result::DatabaseErrorKind::UniqueViolation => {
+                                match details.constraint_name() {
+                                    Some("users_username_uindex") => write!(f, "Username already taken"),
+                                    Some("users_nickname_uindex") => write!(f, "Nickname already taken"),
+                                    _ => write!(f, "Unknown uniqueViolation happened! Contact the administrator")
+                                }
+                            },
+                            diesel::result::DatabaseErrorKind::ForeignKeyViolation => {
+                                match details.constraint_name() {
+                                    Some("comments_questions_id_fk") => write!(f, "No such question found"),
+                                    Some("comments_users_id_fk") => write!(f, "No such user found"),
+                                    _ => write!(f, "Unknown foreignKeyViolation happened! Contact the administrator")
+                                }
+                            },
+                            _ => write!(f, "{:?}, message {:?}, details {:?}, column_name {:?}", error_kind, details.message(), details.details(), details.constraint_name())
+                        }
+                    },
+                    _ => write!(f, "{}", diesel_error)
+                }
+            },
             BackendError::TokenError(err) =>
                 write!(f, "{}", err),
             BackendError::UnknownError =>
                 write!(f, "Unknown error"),
             BackendError::NotAuthorized =>
-                write!(f, "You are not authorized!")
+                write!(f, "You are not authorized!"),
+            BackendError::WrongCredentials => 
+                write!(f, "Wrong credentials given!")
         }
     }
 }

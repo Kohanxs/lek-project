@@ -19,6 +19,7 @@ bcrypt = "0.13.0"
 juniper = "0.15.9"
 juniper_rocket = "0.8.1"
 jsonwebtoken = "8.1.0"
+clap = { version = "4.0.26", features = ["derive"] }
 [dependencies.rocket_contrib]
 version = "0.4.11"
 default-features = false
