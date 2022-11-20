@@ -1,0 +1,4 @@
+
+
+[global.databases.local_db]
+url = "mysql://username:password@ip.add.re.ss/databasename"
