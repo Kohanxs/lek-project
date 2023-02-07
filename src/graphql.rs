@@ -6,7 +6,7 @@ use diesel::result::Error::NotFound;
 use jsonwebtoken::get_current_timestamp;
 use juniper::{FieldResult, RootNode, graphql_object, EmptySubscription, graphql_value, FieldError};
 use crate::models::{user, comment, question, category};
-use crate::auth;
+use crate::auth::{self, validate_token, TokenType};
 use crate::utils::{self, BackendError};
 use std::sync::Arc;
 
@@ -72,7 +72,7 @@ impl Mutation {
         
         let result = if password_matches {
             let timestamp = get_current_timestamp();
-            let tokens = (auth::generate_access_token(user.id, timestamp, &context.jwt_config)?, auth::generate_refresh_token(user.id, timestamp, &context.jwt_config)?);
+            let tokens = (auth::generate_access_token(user.id, timestamp, &context.jwt_config, user.is_admin)?, auth::generate_refresh_token(user.id, timestamp, &context.jwt_config, user.is_admin)?);
             Ok(user::Tokens {access_token: tokens.0, refresh_token: tokens.1})
         } else {
             Err(FieldError::from(utils::BackendError::WrongCredentials))
@@ -81,15 +81,17 @@ impl Mutation {
         result
     }
 
-    // pub async fn refresh_tokens(
-    //     context: &GraphQLContext,
-    //     refresh_token: String,
-    // ) -> FieldResult<user::Tokens> {
+    pub async fn refresh_tokens(
+        context: &GraphQLContext,
+        refresh_token: String,
+    ) -> FieldResult<user::Tokens> {
         
-        
+        let validation_claims = validate_token(&refresh_token, &context.jwt_config, TokenType::Refresh)?;
+        let timestamp = get_current_timestamp();
+        let access_token = auth::generate_access_token(validation_claims.sub.parse::<i32>()?, timestamp, &context.jwt_config, validation_claims.admin)?;
 
-        
-    // }
+        Ok(user::Tokens { access_token: access_token, refresh_token: "".to_owned() })
+    }
     
     pub async fn signup(
         context: &GraphQLContext,
@@ -173,6 +175,25 @@ impl Mutation {
         }
         
         Ok(true)
+    }
+
+    pub async fn modify_question(
+        context: &GraphQLContext,
+        input: comment::ModifyCommentForm,
+    ) -> FieldResult<Comment> {
+        
+        let user = context.user.as_ref().ok_or(utils::BackendError::NotAuthorized)?; //TODO boilerplate
+
+        let comment = context.db_connection.run(move |conn| database::get_comment_by_id(conn, input.id)).await?;
+
+        let result = if comment.users_fk == user.id {
+            let modification_result = context.db_connection.run(move |conn| database::modify_comment(conn, &input.into())).await?;
+            Ok(modification_result)
+        } else {
+            /* Trying to modify someone else's comment  */
+            Err(FieldError::from(utils::BackendError::NotAuthorized))
+        };
+        result
     }
 
 

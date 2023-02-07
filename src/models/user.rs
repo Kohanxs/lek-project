@@ -7,7 +7,9 @@ pub struct User {
     pub username: String,
     #[graphql(skip)]
     pub password_hash: String,
-    pub nickname: String
+    pub nickname: String,
+    #[graphql(skip)]
+    pub is_admin: bool
 }
 
 #[derive(Deserialize, diesel::Insertable)]
@@ -34,6 +36,7 @@ pub struct LoginForm {
 #[derive(GraphQLObject, Serialize, Deserialize)]
 pub struct Tokens {
     pub access_token: String,
+    #[graphql(description="Not used yet")]
     pub refresh_token: String
 }
 
@@ -41,5 +44,6 @@ pub struct Tokens {
 pub struct SafeUser {
     pub id: i32,
     pub username: String,
-    pub nickname: String
+    pub nickname: String,
+    pub is_admin: bool
 }

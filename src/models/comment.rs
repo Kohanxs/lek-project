@@ -2,7 +2,7 @@ use juniper::{GraphQLObject, Nullable};
 
 use crate::schema::comments;
 use crate::models::user::User;
-use crate::models::question::{QuestionDB, Question};
+use crate::models::question::{QuestionDB};
 
 
 
@@ -15,8 +15,7 @@ pub struct CommentDB {
     pub content: String,
     pub suggested_answer: Option<i32>,
     pub users_fk: i32,
-    pub questions_fk: i32,
-    pub likes: i32
+    pub questions_fk: i32
 }
 
 #[derive(GraphQLObject, Debug)]
@@ -28,14 +27,14 @@ pub struct Comment {
     pub likes: i32
 }
 
-impl From<(CommentDB, User)> for Comment {
-    fn from((comment, user): (CommentDB, User)) -> Self {
+impl From<(CommentDB, User, Option<i32>)> for Comment {
+    fn from((comment, user, likes): (CommentDB, User, Option<i32>)) -> Self {
         Comment {
             id: comment.id,
             content: comment.content,
             suggested_answer: comment.suggested_answer,
             user: user,
-            likes: comment.likes
+            likes: likes.unwrap_or(0)
         }
     }
 }

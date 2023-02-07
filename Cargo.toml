@@ -15,6 +15,7 @@ serde_derive = "1.0.109"
 redis = "0.21.5"
 rocket-session-store = "0.2.0"
 async-trait = "0.1.56"
+rocket_cors = { git = "https://github.com/lawliet89/rocket_cors", branch = "master" }
 bcrypt = "0.13.0"
 juniper = "0.15.9"
 juniper_rocket = "0.8.1"

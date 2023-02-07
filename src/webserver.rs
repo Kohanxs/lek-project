@@ -21,7 +21,6 @@ pub async fn get_graphql_handler(
     authenticated_user: Option<SafeUser>
 ) -> juniper_rocket::GraphQLResponse {
     request.execute(&*schema, &GraphQLContext { db_connection: conn, user: authenticated_user, jwt_config: jwt_config.inner().clone()} ).await
-
 }
 
 #[rocket::post("/graphql", data = "<request>")]

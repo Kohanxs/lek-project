@@ -6,7 +6,6 @@ create table users
             primary key,
     username      varchar(32) not null,
     password_hash varchar(64) not null,
-    salt          varchar(22) not null,
     nickname      varchar(32) not null
 );
 
@@ -35,10 +34,7 @@ create table questions
     answer_3       text not null,
     answer_4       text not null,
     answer_5       text not null,
-    correct_answer integer,
-    category_fk    integer
-        constraint questions_category_id_fk
-            references category
+    correct_answer integer
 );
 
 create table comments
@@ -53,20 +49,33 @@ create table comments
             references users,
     questions_fk     integer not null
         constraint comments_questions_id_fk
-            references questions,
-    likes            integer default 1 not null
+            references questions
 );
 
-create table comment_likes
+create table question_category
+(
+    question_fk    int
+        constraint question_category_question_id_fk
+            references questions
+            on delete cascade,
+    category_fk int
+        constraint question_category_category_id_fk
+            references category
+            on delete cascade,
+    constraint question_category_pk
+        primary key (question_fk, category_fk)
+)
+
+create table comment_user
 (
     user_fk    int
-        constraint comment_likes_users_id_fk
+        constraint comment_user_users_id_fk
             references users
             on delete cascade,
     comment_fk int
-        constraint comment_likes_comments_id_fk
+        constraint comment_user_comments_id_fk
             references comments
             on delete cascade,
-    constraint comment_likes_pk
+    constraint comment_user_pk
         primary key (comment_fk, user_fk)
 );
